@@ -8,7 +8,7 @@ Host an Azure App Service web app with outbound access to a regional virtual net
 
 ## Assumptions and decisions
 
-- The directory name suggests `rg-appservice-01` as the intended resource group name. This is an assumption, not a check that the Azure resource group exists.
+- The example resource group name is `rg-appservice-01`. This is an example, not a check that the Azure resource group exists.
 - The App Service plan, app, VNet, and subnets will be in one Azure region. The region and subscription are not specified and remain to be selected.
 - Use a **Standard S1 Linux plan** for a cost-conscious non-production or modest workload. Choose **Premium v3 (P1v3 or an appropriately sized SKU)** when production capacity, scale, or Premium-tier features justify the added cost. Confirm workload sizing, availability, and regional SKU availability before deployment.
 - The address ranges below are examples only. Check them against existing VNet, peered-VNet, VPN, and on-premises address spaces before use.

@@ -26,13 +26,13 @@ The mock mode validates the selected inputs, compiles the template when Azure CL
 ./deploy.sh --mock
 ```
 
-Without root-level JSON files, prompts require a value and do not silently accept defaults. Use `--use-defaults` to explicitly allow the displayed example defaults:
+Without JSON files in `input/appservice/`, prompts require a value and do not silently accept defaults. Use `--use-defaults` to explicitly allow the displayed example defaults:
 
 ```bash
 ./deploy.sh --mock --use-defaults
 ```
 
-You can choose Linux or Windows, provide the corresponding App Service runtime stack, and specify plan SKU name, tier, size, family, and instance capacity. The private DNS zone must remain `privatelink.azurewebsites.net`. The web app name must be globally unique. If root-level JSON files exist, mock mode uses each file as input without prompts and creates one log per resource group.
+You can choose Linux or Windows, provide the corresponding App Service runtime stack, and specify plan SKU name, tier, size, family, and instance capacity. The private DNS zone must remain `privatelink.azurewebsites.net`. The web app name must be globally unique. If JSON files exist in `input/appservice/`, mock mode uses each file as input without prompts and creates one log per resource group.
 
 ## Unit tests
 
@@ -50,16 +50,16 @@ From this directory, run:
 ./deploy.sh
 ```
 
-When no root-level `*.json` files are present, the wrapper prompts for the resource group, location, and the name of each resource. It also prompts for the app operating system and runtime, and for all App Service plan SKU fields: name, tier, size, family, and capacity. Prompts require a value and reject blank input. To explicitly accept the displayed example values, run `./deploy.sh --use-defaults`. The examples are Linux, `NODE|20-lts`, Standard S1, capacity 1; select values supported in the region and suited to your workload. For example, a Premium v3 plan commonly uses name/size `P1v3`, tier `PremiumV3`, and family `P`.
+When no JSON files are present in `input/appservice/`, the wrapper prompts for the resource group, location, and the name of each resource. It also prompts for the app operating system and runtime, and for all App Service plan SKU fields: name, tier, size, family, and capacity. Prompts require a value and reject blank input. To explicitly accept the displayed example values, run `./deploy.sh --use-defaults`. The examples are Linux, `NODE|20-lts`, Standard S1, capacity 1; select values supported in the region and suited to your workload. For example, a Premium v3 plan commonly uses name/size `P1v3`, tier `PremiumV3`, and family `P`.
 
-If one or more JSON files are present at the repository root, the script treats **every** root-level `*.json` file as a Bicep deployment parameters file. It does not prompt for values or use interactive defaults. Each file is deployed separately; its resource group name comes from `metadata.resourceGroupName`, or from the filename without `.json` when that metadata is absent. JSON-driven deployments proceed without an interactive confirmation, so review every parameter file before running the script. Invalid files are reported, and processing continues with the remaining files before returning a failure status.
+If one or more JSON files are present in `input/appservice/`, the script treats every JSON file there as a Bicep deployment parameters file. It does not prompt for values or use interactive defaults. Each file is deployed separately; its resource group name comes from `metadata.resourceGroupName`, or from the filename without `.json` when that metadata is absent. JSON-driven deployments proceed without an interactive confirmation, so review every parameter file before running the script. Invalid files are reported, and processing continues with the remaining files before returning a failure status.
 
-The parameter JSON must use the standard ARM/Bicep deployment-parameters format and include all parameters declared by `main.bicep`: `location`, `vnetName`, `integrationSubnetName`, `privateEndpointSubnetName`, `planName`, `operatingSystem`, `webAppName`, `runtimeStack`, `privateDnsZoneName`, `vnetLinkName`, `privateEndpointName`, `privateDnsZoneGroupName`, `skuName`, `skuTier`, `skuSize`, `skuFamily`, and `skuCapacity`. The private DNS zone must be `privatelink.azurewebsites.net`. An example is [rg-weather-service-01.json](../rg-weather-service-01.json).
+The parameter JSON must use the standard ARM/Bicep deployment-parameters format and include all parameters declared by `main.bicep`: `location`, `vnetName`, `integrationSubnetName`, `privateEndpointSubnetName`, `planName`, `operatingSystem`, `webAppName`, `runtimeStack`, `privateDnsZoneName`, `vnetLinkName`, `privateEndpointName`, `privateDnsZoneGroupName`, `skuName`, `skuTier`, `skuSize`, `skuFamily`, and `skuCapacity`. The private DNS zone must be `privatelink.azurewebsites.net`. An example is [rg-weather-service-01.json](../input/appservice/rg-weather-service-01.json).
 
-You can run one parameter file explicitly, even if other root-level JSON files exist:
+You can run one parameter file explicitly, even if other JSON files exist in `input/appservice/`:
 
 ```bash
-./deploy.sh --parameters-file ../rg-weather-service-01.json
+./deploy.sh --parameters-file ../input/appservice/rg-weather-service-01.json
 ```
 
 The resource group is created if it does not already exist. For each file, the script displays the active subscription and resolved inputs before running the Bicep deployment.

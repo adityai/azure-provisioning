@@ -16,7 +16,7 @@ SAFE_PATH = "/bin:/usr/bin"
 class DeployScriptTests(unittest.TestCase):
     @staticmethod
     def copy_project(root: Path) -> Path:
-        project_dir = root / "rg-appservice-01"
+        project_dir = root / "appservice"
         project_dir.mkdir(exist_ok=True)
         (project_dir / "deploy.sh").write_bytes(SCRIPT.read_bytes())
         (project_dir / "main.bicep").write_bytes((ROOT / "main.bicep").read_bytes())
@@ -277,7 +277,7 @@ class DeployScriptTests(unittest.TestCase):
         self.assertIn("--mock", result.stdout)
         self.assertIn("--use-defaults", result.stdout)
 
-    def test_root_json_files_run_independently_without_prompts(self) -> None:
+    def test_input_json_files_run_independently_without_prompts(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             script = self.copy_project(temp_path)
@@ -292,6 +292,8 @@ class DeployScriptTests(unittest.TestCase):
                 "if [[ \"$1 $2 $3\" == 'deployment group create' ]]; then printf '{\"mockDeployment\":\"succeeded\"}\\n'; fi\n"
             )
             fake_az.chmod(0o755)
+            input_dir = temp_path / "input" / "appservice"
+            input_dir.mkdir(parents=True)
             for name in ("rg-one", "rg-two"):
                 parameters = {
                     "location": "eastus",
@@ -318,7 +320,7 @@ class DeployScriptTests(unittest.TestCase):
                     "metadata": {"resourceGroupName": name},
                     "parameters": {key: {"value": value} for key, value in parameters.items()},
                 }
-                (temp_path / f"{name}.json").write_text(json.dumps(document))
+                (input_dir / f"{name}.json").write_text(json.dumps(document))
 
             result = subprocess.run(
                 [str(BASH), str(script)],
@@ -335,24 +337,26 @@ class DeployScriptTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Found 2 root-level JSON file(s)", result.stdout)
+            self.assertIn("Found 2 input/appservice JSON file(s)", result.stdout)
             self.assertNotIn("Resource group name [", result.stdout)
             calls = calls_file.read_text().splitlines()
             deployments = [call for call in calls if call.startswith("deployment group create")]
             self.assertEqual(len(deployments), 2, calls)
-            self.assertTrue(any("rg-one" in call and f"@{temp_path}/rg-one.json" in call for call in deployments))
-            self.assertTrue(any("rg-two" in call and f"@{temp_path}/rg-two.json" in call for call in deployments))
+            self.assertTrue(any("rg-one" in call and f"@{input_dir}/rg-one.json" in call for call in deployments))
+            self.assertTrue(any("rg-two" in call and f"@{input_dir}/rg-two.json" in call for call in deployments))
             for name in ("rg-one", "rg-two"):
                 log = (temp_path / f"{name}.log").read_text()
                 self.assertIn(f"INPUT Resource group name={name}", log)
-                self.assertIn(f"INPUT Parameter file={temp_path / f'{name}.json'}", log)
+                self.assertIn(f"INPUT Parameter file={input_dir / f'{name}.json'}", log)
                 self.assertIn('{"mockDeployment":"succeeded"}', log)
 
-    def test_interactive_defaults_can_bypass_root_json_files(self) -> None:
+    def test_interactive_defaults_can_bypass_input_json_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             script = self.copy_project(temp_path)
-            (temp_path / "existing.json").write_text("{}")
+            input_dir = temp_path / "input" / "appservice"
+            input_dir.mkdir(parents=True)
+            (input_dir / "existing.json").write_text("{}")
             result = subprocess.run(
                 [str(BASH), str(script), "--mock", "--interactive", "--use-defaults"],
                 input="\n" * 18,
@@ -364,7 +368,7 @@ class DeployScriptTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertNotIn("Found 1 root-level JSON file", result.stdout)
+            self.assertNotIn("Found 1 input/appservice JSON file", result.stdout)
             self.assertIn("Resource group: rg-appservice-01 (eastus)", result.stdout)
             self.assertTrue((temp_path / "rg-appservice-01.log").exists())
 

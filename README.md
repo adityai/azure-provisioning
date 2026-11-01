@@ -2,15 +2,15 @@
 
 This repository contains a reusable Bicep template and Bash/Azure CLI scripts for deploying an Azure App Service with regional VNet integration and private inbound connectivity. The template supports Linux and Windows apps, a user-specified runtime stack and App Service plan SKU, a separate private-endpoint subnet, and the `privatelink.azurewebsites.net` private DNS zone.
 
-The web app is configured with HTTPS-only access and public network access disabled. The deployment provisions infrastructure, but does not publish application code. Start with the [infrastructure plan](rg-appservice-01/infrastructure-plan.md) and [deployment guide](rg-appservice-01/README.md).
+The web app is configured with HTTPS-only access and public network access disabled. The deployment provisions infrastructure, but does not publish application code. Start with the [infrastructure plan](appservice/infrastructure-plan.md) and [deployment guide](appservice/README.md).
 
 ## Repository contents
 
-- [main.bicep](rg-appservice-01/main.bicep) — reusable App Service and private networking template.
-- [deploy.sh](rg-appservice-01/deploy.sh) — prompts for configuration, or consumes JSON parameter files from the repository root.
-- [cleanup.sh](rg-appservice-01/cleanup.sh) — deletes a resource group, checks pre-delete resource IDs for survivors, and attempts individual cleanup.
-- [tests](rg-appservice-01/tests/test_deploy.py) — unit and mock Azure CLI tests.
-- `rg-*.json` — Bicep deployment parameter examples. Every root-level JSON file is treated as a deployment input by `deploy.sh`.
+- [main.bicep](appservice/main.bicep) — reusable App Service and private networking template.
+- [deploy.sh](appservice/deploy.sh) — prompts for configuration, or consumes JSON parameter files from `input/appservice/`.
+- [cleanup.sh](appservice/cleanup.sh) — deletes a resource group, checks pre-delete resource IDs for survivors, and attempts individual cleanup.
+- [tests](appservice/tests/test_deploy.py) — unit and mock Azure CLI tests.
+- [input/appservice/](input/appservice/) — Bicep deployment parameter files. Every JSON file in this directory is treated as a deployment input by `deploy.sh`.
 
 ## Prerequisites
 
@@ -63,16 +63,16 @@ Open the repository in VS Code, choose GitHub Copilot Chat in **Agent** mode, an
 To run the repository's mock script and validate the parameter files without deploying:
 
 ```text
-Run a mock App Service deployment for every root-level JSON parameter file.
-Use ./rg-appservice-01/deploy.sh --mock. Do not call Azure deployment or
+Run a mock App Service deployment for every JSON parameter file in input/appservice/.
+Use ./appservice/deploy.sh --mock. Do not call Azure deployment or
 resource-creation tools. Show me the result and the generated
 <resource-group-name>.log files.
 ```
 
-For an interactive mock when no root-level JSON files are present:
+For an interactive mock when no JSON files are present in input/appservice/:
 
 ```text
-Run ./rg-appservice-01/deploy.sh --mock interactively. Ask me for each input
+Run ./appservice/deploy.sh --mock --interactive. Ask me for each input
 instead of accepting defaults. Do not make any Azure changes.
 ```
 
@@ -83,7 +83,7 @@ The local mock compiles Bicep when Azure CLI/Bicep is installed; it does not pro
 For a real deployment, ask Copilot to use the connected Azure MCP server and make the provisioning intent explicit:
 
 ```text
-Deploy the App Service architecture from rg-appservice-01/main.bicep using
+Deploy the App Service architecture from appservice/main.bicep using
 the connected Azure MCP server, not a local mock. Target subscription
 <subscription-id> and resource group <resource-group-name> in <region>.
 Use parameter file <path-to-parameters-json> (or ask me for each required
@@ -94,14 +94,14 @@ confirm. After confirmation, deploy and report the operation result and
 resource IDs.
 ```
 
-The Azure MCP server may expose different deployment capabilities depending on its version and connected tools. If it cannot deploy this Bicep template directly, ask Copilot to state that limitation and stop; do not silently substitute another deployment path. Real deployments create billable resources. The repository script's root-level JSON mode also deploys every root-level JSON file without prompting for values or confirmation, so review those files before using it.
+The Azure MCP server may expose different deployment capabilities depending on its version and connected tools. If it cannot deploy this Bicep template directly, ask Copilot to state that limitation and stop; do not silently substitute another deployment path. Real deployments create billable resources. The repository script deploys every JSON file in `input/appservice/` without prompting for values or confirmation, so review those files before using it.
 
 ## Run tests
 
 From the repository root:
 
 ```bash
-python3 -m unittest discover -s rg-appservice-01/tests -v
+python3 -m unittest discover -s appservice/tests -v
 ```
 
 The tests mock Azure CLI and do not create Azure resources.
@@ -110,16 +110,16 @@ The tests mock Azure CLI and do not create Azure resources.
 
 ### Interactive prompts
 
-If there are **no root-level JSON files**, the deploy script requires you to enter each value:
+If there are **no JSON files in `input/appservice/`**, the deploy script requires you to enter each value:
 
 ```bash
-./rg-appservice-01/deploy.sh
+./appservice/deploy.sh
 ```
 
-Prompts do not show or silently use defaults; blank input is rejected. To explicitly accept the example defaults, pass `--use-defaults`. If root-level JSON parameter files are present, also pass `--interactive` to bypass their automatic processing:
+Prompts do not show or silently use defaults; blank input is rejected. To explicitly accept the example defaults, pass `--use-defaults`. If JSON parameter files are present in `input/appservice/`, also pass `--interactive` to bypass their automatic processing:
 
 ```bash
-./rg-appservice-01/deploy.sh --interactive --use-defaults
+./appservice/deploy.sh --interactive --use-defaults
 ```
 
 In this mode, each prompt displays an example in brackets. Press Enter to accept it, or type another value. The example defaults are:
@@ -146,40 +146,40 @@ You can override any displayed default at its prompt. The app name must be globa
 
 ### JSON parameter files
 
-If one or more `*.json` files are present **at the repository root**, the script processes every one as a Bicep parameter file, without prompting or using interactive defaults:
+If one or more `*.json` files are present in **`input/appservice/`**, the script processes every one as a Bicep parameter file, without prompting or using interactive defaults:
 
 ```bash
-./rg-appservice-01/deploy.sh
+./appservice/deploy.sh
 ```
 
-This is a live deployment unless `--mock` is specified. JSON-driven deployments do not require an interactive confirmation. Keep only intended deployment parameter files at the root before running the live command: unrelated JSON files will also be treated as deployment inputs. Each file must use ARM/Bicep parameters format and include all template parameters. Its resource group name is read from `metadata.resourceGroupName`, or falls back to the JSON filename without the `.json` extension.
+This is a live deployment unless `--mock` is specified. JSON-driven deployments do not require an interactive confirmation. Keep only intended deployment parameter files in `input/appservice/` before running the live command: every JSON file there is treated as a deployment input. Each file must use ARM/Bicep parameters format and include all template parameters. Its resource group name is read from `metadata.resourceGroupName`, or falls back to the JSON filename without the `.json` extension.
 
-To select one file explicitly (and ignore root-level auto-discovery):
+To select one file explicitly (and ignore automatic discovery):
 
 ```bash
-./rg-appservice-01/deploy.sh --parameters-file ./rg-weather-service-01.json
+./appservice/deploy.sh --parameters-file ./input/appservice/rg-weather-service-01.json
 ```
 
-An example parameter file is [rg-weather-service-01.json](rg-weather-service-01.json).
+An example parameter file is [rg-weather-service-01.json](input/appservice/rg-weather-service-01.json).
 
 ### Mock deployment
 
 Use mock mode to validate input and compile Bicep when Azure CLI/Bicep is installed, without running Azure deployment commands:
 
 ```bash
-./rg-appservice-01/deploy.sh --mock
+./appservice/deploy.sh --mock
 ```
 
-With root-level JSON files, mock mode processes each file without prompting. Without root-level JSON files, it requires values at interactive prompts. Use `--use-defaults` only when you want to accept example values. For a single JSON file:
+With JSON files in `input/appservice/`, mock mode processes each file without prompting. Without parameter files, it requires values at interactive prompts. Use `--use-defaults` only when you want to accept example values. For a single JSON file:
 
 ```bash
-./rg-appservice-01/deploy.sh --mock --parameters-file ./rg-weather-service-01.json
+./appservice/deploy.sh --mock --parameters-file ./input/appservice/rg-weather-service-01.json
 ```
 
-To run an interactive mock using example defaults, bypassing any root-level JSON files:
+To run an interactive mock using example defaults, bypassing any JSON files in `input/appservice/`:
 
 ```bash
-./rg-appservice-01/deploy.sh --mock --interactive --use-defaults
+./appservice/deploy.sh --mock --interactive --use-defaults
 ```
 
 Mock runs write a log named `<resource-group-name>.log` in the current working directory. Real deployment logs include entered inputs, Bicep build output, and Azure CLI command output.
@@ -189,11 +189,11 @@ Mock runs write a log named `<resource-group-name>.log` in the current working d
 To remove a resource group and check for resources that survived its deletion:
 
 ```bash
-./rg-appservice-01/cleanup.sh --resource-group "<resource-group-name>" --subscription "<subscription-id>"
+./appservice/cleanup.sh --resource-group "<resource-group-name>" --subscription "<subscription-id>"
 ```
 
 The cleanup script inventories resources before deletion, requires typing the resource group name to confirm, waits for group deletion, and checks whether those saved resource IDs remain. Any survivors are individually deleted and checked again. It cannot discover resources orphaned before the initial inventory or billable service-specific soft-deleted data. Use its mock option to preview the workflow without Azure calls:
 
 ```bash
-./rg-appservice-01/cleanup.sh --mock --resource-group "<resource-group-name>"
+./appservice/cleanup.sh --mock --resource-group "<resource-group-name>"
 ```

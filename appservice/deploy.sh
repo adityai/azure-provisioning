@@ -15,13 +15,13 @@ Usage: ./deploy.sh [--mock] [--use-defaults] [--interactive] [--parameters-file 
 
 Interactively deploy an App Service and private networking resources defined
 in main.bicep to the selected Azure resource group.
-If JSON files exist at the repository root, each is deployed as a parameter
-file instead of prompting.
+If JSON files exist in input/appservice, each is deployed as a parameter file
+instead of prompting.
 
 Options:
   --mock                 Compile and preview deployments without Azure deployment calls.
   --use-defaults         Accept the displayed example defaults in interactive mode.
-  --interactive          Prompt instead of discovering root-level JSON parameter files.
+  --interactive          Prompt instead of discovering input/appservice JSON parameter files.
   --parameters-file FILE Deploy one Bicep parameters JSON file without prompts.
   -h, --help
 EOF
@@ -185,12 +185,12 @@ prompt_sku_capacity() {
 
 if [[ -z "$PARAMETERS_FILE" && "$INTERACTIVE_MODE" != true ]]; then
   shopt -s nullglob
-  parameter_files=("$REPO_ROOT"/*.json)
+  parameter_files=("$REPO_ROOT"/input/appservice/*.json)
   shopt -u nullglob
 
   if ((${#parameter_files[@]} > 0)); then
     failures=0
-    printf 'Found %s root-level JSON file(s); using each as a deployment parameter file.\n' "${#parameter_files[@]}"
+    printf 'Found %s input/appservice JSON file(s); using each as a deployment parameter file.\n' "${#parameter_files[@]}"
     for parameter_file in "${parameter_files[@]}"; do
       printf '\n=== Processing %s ===\n' "$parameter_file"
       child_args=(--parameters-file "$parameter_file")
