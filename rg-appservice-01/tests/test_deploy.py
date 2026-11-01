@@ -23,12 +23,17 @@ class DeployScriptTests(unittest.TestCase):
         (project_dir / "deploy.sh").chmod(0o755)
         return project_dir / "deploy.sh"
 
-    def run_mock(self, answers: str) -> tuple[subprocess.CompletedProcess[str], str]:
+    def run_mock(
+        self, answers: str, *, use_defaults: bool = True
+    ) -> tuple[subprocess.CompletedProcess[str], str]:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             script = self.copy_project(temp_path)
+            args = [str(BASH), str(script), "--mock"]
+            if use_defaults:
+                args.append("--use-defaults")
             result = subprocess.run(
-                [str(BASH), str(script), "--mock"],
+                args,
                 input=answers,
                 text=True,
                 capture_output=True,
@@ -58,9 +63,20 @@ class DeployScriptTests(unittest.TestCase):
         self.assertIn("Would deploy: az deployment group create", result.stdout)
         self.assertIn("INPUT App Service operating system (Linux or Windows)=Linux", log_content)
         self.assertIn("INPUT App Service runtime stack (for example NODE|20-lts or DOTNET|8.0)=NODE|20-lts", log_content)
-        self.assertIn("INPUT App Service plan SKU name=S1", log_content)
+        self.assertIn(
+            "INPUT App Service plan SKU name (suggestions: B1, S1, P1v3, P0v3, EP1)=S1",
+            log_content,
+        )
         self.assertIn("Bicep compilation skipped:", log_content)
         self.assertIn("no Azure deployment commands were run", log_content)
+
+    def test_interactive_mock_requires_values_instead_of_silently_using_defaults(self) -> None:
+        result, _ = self.run_mock("\n", use_defaults=False)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Resource group name:", result.stdout)
+        self.assertNotIn("Resource group: rg-appservice-01", result.stdout)
+        self.assertIn("A value is required", result.stderr)
 
     def test_mock_mode_accepts_resource_name_overrides_and_premium_sku(self) -> None:
         answers = "\n".join(
@@ -94,6 +110,14 @@ class DeployScriptTests(unittest.TestCase):
         self.assertIn("Web app: my-private-app-987", result.stdout)
         self.assertIn("Runtime stack: DOTNET|8.0", result.stdout)
         self.assertIn("Private endpoint: pep-custom", result.stdout)
+        self.assertIn(
+            "App Service plan SKU name (suggestions: B1, S1, P1v3, P0v3, EP1)",
+            result.stdout,
+        )
+        self.assertIn(
+            "App Service plan SKU size (usually matches SKU name; examples: B1, S1, P1v3, P0v3, EP1)",
+            result.stdout,
+        )
 
     def test_invalid_web_app_name_is_rejected_and_reprompted(self) -> None:
         answers = "\n".join(
@@ -166,7 +190,7 @@ class DeployScriptTests(unittest.TestCase):
             answers = "\n" * 18 + "y\n"
             log_path = temp_path / "rg-appservice-01.log"
             result = subprocess.run(
-                [str(BASH), str(script)],
+                [str(BASH), str(script), "--use-defaults"],
                 input=answers,
                 text=True,
                 capture_output=True,
@@ -220,7 +244,7 @@ class DeployScriptTests(unittest.TestCase):
             fake_az.chmod(0o755)
             answers = "\n" * 18 + "n\n"
             result = subprocess.run(
-                [str(BASH), str(script)],
+                [str(BASH), str(script), "--use-defaults"],
                 input=answers,
                 text=True,
                 capture_output=True,
@@ -251,6 +275,7 @@ class DeployScriptTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0)
         self.assertIn("--mock", result.stdout)
+        self.assertIn("--use-defaults", result.stdout)
 
     def test_root_json_files_run_independently_without_prompts(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

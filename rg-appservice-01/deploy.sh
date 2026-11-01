@@ -6,10 +6,11 @@ REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 TEMPLATE_FILE="$SCRIPT_DIR/main.bicep"
 MOCK_MODE=false
 PARAMETERS_FILE=""
+USE_DEFAULTS=false
 
 usage() {
   cat <<'EOF'
-Usage: ./deploy.sh [--mock] [--parameters-file FILE]
+Usage: ./deploy.sh [--mock] [--use-defaults] [--parameters-file FILE]
 
 Interactively deploy an App Service and private networking resources defined
 in main.bicep to the selected Azure resource group.
@@ -18,6 +19,7 @@ file instead of prompting.
 
 Options:
   --mock                 Compile and preview deployments without Azure deployment calls.
+  --use-defaults         Accept the displayed example defaults in interactive mode.
   --parameters-file FILE Deploy one Bicep parameters JSON file without prompts.
   -h, --help
 EOF
@@ -38,6 +40,9 @@ while (($#)); do
       PARAMETERS_FILE="$2"
       shift
       ;;
+    --use-defaults)
+      USE_DEFAULTS=true
+      ;;
     -h|--help)
       usage
       exit 0
@@ -53,9 +58,21 @@ prompt_value() {
   local label="$1"
   local default_value="$2"
   local value
-  printf '%s [%s]: ' "$label" "$default_value"
-  IFS= read -r value || value=''
-  REPLY="${value:-$default_value}"
+  if [[ "$USE_DEFAULTS" == true ]]; then
+    printf '%s [%s]: ' "$label" "$default_value"
+    IFS= read -r value || value=''
+    REPLY="${value:-$default_value}"
+  else
+    while true; do
+      printf '%s: ' "$label"
+      IFS= read -r value || fail "No input received for required value: $label"
+      if [[ -n "$value" ]]; then
+        REPLY="$value"
+        break
+      fi
+      printf 'A value is required; enter a value to continue.\n' >&2
+    done
+  fi
   printf '\nINPUT %s=%s\n' "$label" "$REPLY"
 }
 
@@ -173,6 +190,7 @@ if [[ -z "$PARAMETERS_FILE" ]]; then
       printf '\n=== Processing %s ===\n' "$parameter_file"
       child_args=(--parameters-file "$parameter_file")
       [[ "$MOCK_MODE" == true ]] && child_args+=(--mock)
+      [[ "$USE_DEFAULTS" == true ]] && child_args+=(--use-defaults)
       if "$SCRIPT_DIR/deploy.sh" "${child_args[@]}"; then
         printf 'Completed parameter file: %s\n' "$parameter_file"
       else
@@ -288,8 +306,9 @@ fi
 [[ "$resource_group_name" =~ ^[A-Za-z0-9][A-Za-z0-9._()-]{0,89}$ ]] ||
   fail "Invalid resource group name: $resource_group_name"
 LOG_FILE="$PWD/${resource_group_name}.log"
-: > "$LOG_FILE" || fail "Could not create deployment log: $LOG_FILE"
+touch "$LOG_FILE" || fail "Could not create deployment log: $LOG_FILE"
 exec > >(tee -a "$LOG_FILE") 2>&1
+printf '\n===== Deployment run =====\n'
 printf 'App Service deployment log\n'
 printf 'Started: %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 printf 'Log file: %s\n' "$LOG_FILE"
@@ -345,11 +364,11 @@ else
   private_endpoint_name="$REPLY"
   prompt_resource_name 'Private DNS zone group name' 'default' 80
   private_dns_zone_group_name="$REPLY"
-  prompt_sku_token 'App Service plan SKU name' 'S1'
+  prompt_sku_token 'App Service plan SKU name (suggestions: B1, S1, P1v3, P0v3, EP1)' 'S1'
   sku_name="$REPLY"
   prompt_sku_token 'App Service plan SKU tier' 'Standard'
   sku_tier="$REPLY"
-  prompt_sku_token 'App Service plan SKU size' "$sku_name"
+  prompt_sku_token 'App Service plan SKU size (usually matches SKU name; examples: B1, S1, P1v3, P0v3, EP1)' "$sku_name"
   sku_size="$REPLY"
   prompt_sku_token 'App Service plan SKU family' "${sku_name:0:1}"
   sku_family="$REPLY"

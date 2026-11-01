@@ -110,13 +110,19 @@ The tests mock Azure CLI and do not create Azure resources.
 
 ### Interactive prompts
 
-If there are **no root-level JSON files**, the deploy script prompts for each value:
+If there are **no root-level JSON files**, the deploy script requires you to enter each value:
 
 ```bash
 ./rg-appservice-01/deploy.sh
 ```
 
-Each prompt displays an example/default in brackets. Press Enter to accept it, or type another value. The defaults are:
+Prompts do not show or silently use defaults; blank input is rejected. To explicitly accept the example defaults, pass `--use-defaults`:
+
+```bash
+./rg-appservice-01/deploy.sh --use-defaults
+```
+
+In this mode, each prompt displays an example in brackets. Press Enter to accept it, or type another value. The example defaults are:
 
 | Input | Default |
 |---|---|
@@ -164,10 +170,16 @@ Use mock mode to validate input and compile Bicep when Azure CLI/Bicep is instal
 ./rg-appservice-01/deploy.sh --mock
 ```
 
-With root-level JSON files, mock mode processes each file without prompting. Without root-level JSON files, it presents the interactive prompts and their defaults. For a single JSON file:
+With root-level JSON files, mock mode processes each file without prompting. Without root-level JSON files, it requires values at interactive prompts. Use `--use-defaults` only when you want to accept example values. For a single JSON file:
 
 ```bash
 ./rg-appservice-01/deploy.sh --mock --parameters-file ./rg-weather-service-01.json
+```
+
+To run an interactive mock using example defaults:
+
+```bash
+./rg-appservice-01/deploy.sh --mock --use-defaults
 ```
 
 Mock runs write a log named `<resource-group-name>.log` in the current working directory. Real deployment logs include entered inputs, Bicep build output, and Azure CLI command output.

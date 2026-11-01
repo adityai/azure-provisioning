@@ -26,7 +26,13 @@ The mock mode validates the selected inputs, compiles the template when Azure CL
 ./deploy.sh --mock
 ```
 
-With no root-level JSON files, press Enter to accept each displayed default or enter values when prompted. You can choose Linux or Windows, provide the corresponding App Service runtime stack, and specify plan SKU name, tier, size, family, and instance capacity. The private DNS zone must remain `privatelink.azurewebsites.net`. The web app name must be globally unique. If root-level JSON files exist, mock mode uses each file as input without prompts and creates one log per resource group.
+Without root-level JSON files, prompts require a value and do not silently accept defaults. Use `--use-defaults` to explicitly allow the displayed example defaults:
+
+```bash
+./deploy.sh --mock --use-defaults
+```
+
+You can choose Linux or Windows, provide the corresponding App Service runtime stack, and specify plan SKU name, tier, size, family, and instance capacity. The private DNS zone must remain `privatelink.azurewebsites.net`. The web app name must be globally unique. If root-level JSON files exist, mock mode uses each file as input without prompts and creates one log per resource group.
 
 ## Unit tests
 
@@ -44,7 +50,7 @@ From this directory, run:
 ./deploy.sh
 ```
 
-When no root-level `*.json` files are present, the wrapper prompts for the resource group, location, and the name of each resource. It also prompts for the app operating system and runtime, and for all App Service plan SKU fields: name, tier, size, family, and capacity. Defaults are examples only (Linux, `NODE|20-lts`, Standard S1, capacity 1); choose values supported in the selected region and matching your workload. For example, a Premium v3 plan commonly uses name/size `P1v3`, tier `PremiumV3`, and family `P`.
+When no root-level `*.json` files are present, the wrapper prompts for the resource group, location, and the name of each resource. It also prompts for the app operating system and runtime, and for all App Service plan SKU fields: name, tier, size, family, and capacity. Prompts require a value and reject blank input. To explicitly accept the displayed example values, run `./deploy.sh --use-defaults`. The examples are Linux, `NODE|20-lts`, Standard S1, capacity 1; select values supported in the region and suited to your workload. For example, a Premium v3 plan commonly uses name/size `P1v3`, tier `PremiumV3`, and family `P`.
 
 If one or more JSON files are present at the repository root, the script treats **every** root-level `*.json` file as a Bicep deployment parameters file. It does not prompt for values or use interactive defaults. Each file is deployed separately; its resource group name comes from `metadata.resourceGroupName`, or from the filename without `.json` when that metadata is absent. JSON-driven deployments proceed without an interactive confirmation, so review every parameter file before running the script. Invalid files are reported, and processing continues with the remaining files before returning a failure status.
 
@@ -64,7 +70,7 @@ The network address prefixes in `main.bicep` default to the illustrative ranges 
 
 After deployment, validate DNS and HTTPS from an intended private network. The template provisions the app as private-only, so access requires working VNet routing and DNS. Clients outside the linked VNet need private connectivity and DNS forwarding or an additional private DNS VNet link. The private DNS zone group creates app and SCM records for the private endpoint.
 
-The SKU input fields are passed through to Azure rather than being restricted to a fixed list. Ensure that the SKU name, tier, size, and family form a valid combination available in the selected region, and verify quotas and workload needs before deploying.
+The SKU name and size prompts always include suggestions such as `B1`, `S1`, `P1v3`, `P0v3`, and `EP1`; size usually matches the SKU name. These are examples, not a guarantee of regional availability or a valid SKU combination. SKU fields are passed through to Azure rather than being restricted to a fixed list. Ensure that SKU name, tier, size, and family form a valid combination for the selected region, and verify quotas and workload needs before deploying.
 
 ## Delete and verify resources
 
