@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "resourceGroupName": "rg-weather-service-01"
+  },
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "vnetName": {
+      "value": "vnet-weather-service-01"
+    },
+    "integrationSubnetName": {
+      "value": "vnet-int-weather-service-01"
+    },
+    "privateEndpointSubnetName": {
+      "value": "subnet-pe-weather-service-01"
+    },
+    "planName": {
+      "value": "plan-weather-service-01"
+    },
+    "operatingSystem": {
+      "value": "Linux"
+    },
+    "runtimeStack": {
+      "value": "NODE|20-lts"
+    },
+    "webAppName": {
+      "value": "app-weather-service-01"
+    },
+    "privateDnsZoneName": {
+      "value": "privatelink.azurewebsites.net"
+    },
+    "vnetLinkName": {
+      "value": "private-dns-vnet-link-weather-service-01"
+    },
+    "privateEndpointName": {
+      "value": "pe-weather-service-01"
+    },
+    "privateDnsZoneGroupName": {
+      "value": "private-dns-zone-group-weather-service-01"
+    },
+    "skuName": {
+      "value": "S1"
+    },
+    "skuTier": {
+      "value": "Standard"
+    },
+    "skuSize": {
+      "value": "S1"
+    },
+    "skuFamily": {
+      "value": "S"
+    },
+    "skuCapacity": {
+      "value": 1
+    }
+  }
+}
