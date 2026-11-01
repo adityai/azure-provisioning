@@ -7,10 +7,11 @@ TEMPLATE_FILE="$SCRIPT_DIR/main.bicep"
 MOCK_MODE=false
 PARAMETERS_FILE=""
 USE_DEFAULTS=false
+INTERACTIVE_MODE=false
 
 usage() {
   cat <<'EOF'
-Usage: ./deploy.sh [--mock] [--use-defaults] [--parameters-file FILE]
+Usage: ./deploy.sh [--mock] [--use-defaults] [--interactive] [--parameters-file FILE]
 
 Interactively deploy an App Service and private networking resources defined
 in main.bicep to the selected Azure resource group.
@@ -20,6 +21,7 @@ file instead of prompting.
 Options:
   --mock                 Compile and preview deployments without Azure deployment calls.
   --use-defaults         Accept the displayed example defaults in interactive mode.
+  --interactive          Prompt instead of discovering root-level JSON parameter files.
   --parameters-file FILE Deploy one Bicep parameters JSON file without prompts.
   -h, --help
 EOF
@@ -42,6 +44,9 @@ while (($#)); do
       ;;
     --use-defaults)
       USE_DEFAULTS=true
+      ;;
+    --interactive)
+      INTERACTIVE_MODE=true
       ;;
     -h|--help)
       usage
@@ -178,7 +183,7 @@ prompt_sku_capacity() {
   done
 }
 
-if [[ -z "$PARAMETERS_FILE" ]]; then
+if [[ -z "$PARAMETERS_FILE" && "$INTERACTIVE_MODE" != true ]]; then
   shopt -s nullglob
   parameter_files=("$REPO_ROOT"/*.json)
   shopt -u nullglob

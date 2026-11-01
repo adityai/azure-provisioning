@@ -116,10 +116,10 @@ If there are **no root-level JSON files**, the deploy script requires you to ent
 ./rg-appservice-01/deploy.sh
 ```
 
-Prompts do not show or silently use defaults; blank input is rejected. To explicitly accept the example defaults, pass `--use-defaults`:
+Prompts do not show or silently use defaults; blank input is rejected. To explicitly accept the example defaults, pass `--use-defaults`. If root-level JSON parameter files are present, also pass `--interactive` to bypass their automatic processing:
 
 ```bash
-./rg-appservice-01/deploy.sh --use-defaults
+./rg-appservice-01/deploy.sh --interactive --use-defaults
 ```
 
 In this mode, each prompt displays an example in brackets. Press Enter to accept it, or type another value. The example defaults are:
@@ -176,10 +176,10 @@ With root-level JSON files, mock mode processes each file without prompting. Wit
 ./rg-appservice-01/deploy.sh --mock --parameters-file ./rg-weather-service-01.json
 ```
 
-To run an interactive mock using example defaults:
+To run an interactive mock using example defaults, bypassing any root-level JSON files:
 
 ```bash
-./rg-appservice-01/deploy.sh --mock --use-defaults
+./rg-appservice-01/deploy.sh --mock --interactive --use-defaults
 ```
 
 Mock runs write a log named `<resource-group-name>.log` in the current working directory. Real deployment logs include entered inputs, Bicep build output, and Azure CLI command output.

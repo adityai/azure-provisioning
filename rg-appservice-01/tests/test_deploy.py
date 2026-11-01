@@ -348,6 +348,26 @@ class DeployScriptTests(unittest.TestCase):
                 self.assertIn(f"INPUT Parameter file={temp_path / f'{name}.json'}", log)
                 self.assertIn('{"mockDeployment":"succeeded"}', log)
 
+    def test_interactive_defaults_can_bypass_root_json_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            script = self.copy_project(temp_path)
+            (temp_path / "existing.json").write_text("{}")
+            result = subprocess.run(
+                [str(BASH), str(script), "--mock", "--interactive", "--use-defaults"],
+                input="\n" * 18,
+                text=True,
+                capture_output=True,
+                env={**os.environ, "PATH": SAFE_PATH},
+                cwd=temp_path,
+                check=False,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertNotIn("Found 1 root-level JSON file", result.stdout)
+            self.assertIn("Resource group: rg-appservice-01 (eastus)", result.stdout)
+            self.assertTrue((temp_path / "rg-appservice-01.log").exists())
+
 
 class CleanupScriptTests(unittest.TestCase):
     def fake_azure_cli(self, temp_path: Path) -> tuple[Path, Path]:
