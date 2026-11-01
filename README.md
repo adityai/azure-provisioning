@@ -1,6 +1,6 @@
 # Azure App Service private networking deployment
 
-This repository contains a reusable Bicep template and Bash/Azure CLI scripts for deploying an Azure App Service with regional VNet integration and private inbound connectivity. The template supports Linux and Windows apps, a user-specified runtime stack and App Service plan SKU, a separate private-endpoint subnet, and the `privatelink.azurewebsites.net` private DNS zone.
+This repository contains reusable Bicep templates and Bash/Azure CLI scripts for deploying private Azure App Service and Function App infrastructure. Both options support regional VNet integration and private inbound connectivity; the Function App template also privately networks its required Storage account.
 
 The web app is configured with HTTPS-only access and public network access disabled. The deployment provisions infrastructure, but does not publish application code. Start with the [infrastructure plan](appservice/infrastructure-plan.md) and [deployment guide](appservice/README.md).
 
@@ -11,6 +11,26 @@ The web app is configured with HTTPS-only access and public network access disab
 - [cleanup.sh](appservice/cleanup.sh) — deletes a resource group, checks pre-delete resource IDs for survivors, and attempts individual cleanup.
 - [tests](appservice/tests/test_deploy.py) — unit and mock Azure CLI tests.
 - [input/appservice/](input/appservice/) — Bicep deployment parameter files. Every JSON file in this directory is treated as a deployment input by `deploy.sh`.
+- [functionapp/](functionapp/) — Linux Function App infrastructure plan, Bicep template, deployment/cleanup scripts, and tests for private networking.
+- [input/functionapp/](input/functionapp/) — Function App Bicep deployment parameter files, auto-discovered by `functionapp/deploy.sh`.
+
+## Function App deployment
+
+The Function App template uses Linux Functions v4 on an Elastic Premium plan, a private endpoint for inbound traffic, and a private Storage account with Blob, File, Queue, and Table private endpoints.
+
+Run a mock deployment (the parameter file is discovered automatically):
+
+```bash
+./functionapp/deploy.sh --mock
+```
+
+For interactive prompting instead of JSON discovery, use `--interactive`. Prompts require values; `--use-defaults` explicitly accepts the displayed examples. A live deployment processes every JSON file in `input/functionapp/` without prompting or confirmation, so review those files before deploying. See the [Function App deployment guide](functionapp/README.md) and [infrastructure plan](functionapp/infrastructure-plan.md).
+
+Run its tests from the repository root:
+
+```bash
+python3 -m unittest discover -s functionapp/tests -v
+```
 
 ## Prerequisites
 

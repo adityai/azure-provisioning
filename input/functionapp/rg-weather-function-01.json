@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "resourceGroupName": "rg-weather-function-01"
+  },
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "vnetName": {
+      "value": "vnet-weather-function-01"
+    },
+    "integrationSubnetName": {
+      "value": "snet-function-integration"
+    },
+    "privateEndpointSubnetName": {
+      "value": "snet-function-private-endpoint"
+    },
+    "planName": {
+      "value": "ep-weather-function-01"
+    },
+    "storageAccountName": {
+      "value": "stweatherfunc01"
+    },
+    "functionAppName": {
+      "value": "func-weather-01"
+    },
+    "runtimeStack": {
+      "value": "Python|3.12"
+    },
+    "privateDnsZoneName": {
+      "value": "privatelink.azurewebsites.net"
+    },
+    "vnetLinkName": {
+      "value": "private-dns-vnet-link-function-01"
+    },
+    "privateEndpointName": {
+      "value": "pe-weather-function-01"
+    },
+    "privateDnsZoneGroupName": {
+      "value": "private-dns-zone-group-function-01"
+    },
+    "skuName": {
+      "value": "EP1"
+    },
+    "skuTier": {
+      "value": "ElasticPremium"
+    },
+    "skuSize": {
+      "value": "EP1"
+    },
+    "skuFamily": {
+      "value": "EP"
+    },
+    "skuCapacity": {
+      "value": 1
+    }
+  }
+}
