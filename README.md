@@ -1,6 +1,6 @@
-# Azure App Service private networking deployment
+# Azure private networking deployment templates
 
-This repository contains reusable Bicep templates and Bash/Azure CLI scripts for deploying private Azure App Service and Function App infrastructure. Both options support regional VNet integration and private inbound connectivity; the Function App template also privately networks its required Storage account.
+This repository contains reusable Bicep templates and Bash/Azure CLI scripts for deploying Azure services with private networking: App Service, Function App, Blob Storage, Azure Files, Azure SQL Database, Cosmos DB for NoSQL, and Key Vault.
 
 The web app is configured with HTTPS-only access and public network access disabled. The deployment provisions infrastructure, but does not publish application code. Start with the [infrastructure plan](appservice/infrastructure-plan.md) and [deployment guide](appservice/README.md).
 
@@ -13,6 +13,24 @@ The web app is configured with HTTPS-only access and public network access disab
 - [input/appservice/](input/appservice/) — Bicep deployment parameter files. Every JSON file in this directory is treated as a deployment input by `deploy.sh`.
 - [functionapp/](functionapp/) — Linux Function App infrastructure plan, Bicep template, deployment/cleanup scripts, and tests for private networking.
 - [input/functionapp/](input/functionapp/) — Function App Bicep deployment parameter files, auto-discovered by `functionapp/deploy.sh`.
+- [blobstorage/](blobstorage/) and [input/blobstorage/](input/blobstorage/) — private Blob Storage account and container deployment.
+- [fileshare/](fileshare/) and [input/fileshare/](input/fileshare/) — private Azure Files share deployment.
+- [sqldb/](sqldb/) and [input/sqldb/](input/sqldb/) — private Azure SQL Database deployment.
+- [cosmosdb/](cosmosdb/) and [input/cosmosdb/](input/cosmosdb/) — private Cosmos DB for NoSQL deployment.
+- [keyvault/](keyvault/) and [input/keyvault/](input/keyvault/) — private, RBAC-enabled Key Vault deployment.
+- [sqldb/](sqldb/) — the SQL deployment prompts for its administrator password only during live deployment; it is not stored in the sample JSON.
+
+Each service directory contains an infrastructure plan, Bicep template, deployment and cleanup scripts, focused tests, and service-specific instructions. Each input directory contains a sample parameter file. Review parameter files before real deployments: the scripts automatically process every `*.json` in the matching input directory. Most services do not request confirmation in JSON mode; the SQL deployment additionally prompts securely for its administrator password. `--mock` validates and previews without Azure deployment calls; `--interactive` bypasses parameter-file discovery and prompts instead. Defaults are used only with `--use-defaults`.
+
+Run a service's tests from the repository root, for example:
+
+```bash
+python3 -m unittest discover -s blobstorage/tests -v
+python3 -m unittest discover -s fileshare/tests -v
+python3 -m unittest discover -s sqldb/tests -v
+python3 -m unittest discover -s cosmosdb/tests -v
+python3 -m unittest discover -s keyvault/tests -v
+```
 
 ## Function App deployment
 
