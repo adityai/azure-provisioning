@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "resourceGroupName": "rg-weather-sqldb-01"
+  },
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "serverName": {
+      "value": "weather-sql-weather-01"
+    },
+    "databaseName": {
+      "value": "weatherdb"
+    },
+    "adminLogin": {
+      "value": "sqladminweather"
+    },
+    "vnetName": {
+      "value": "vnet-weather-sqldb-01"
+    },
+    "privateEndpointSubnetName": {
+      "value": "snet-sqldb-private-endpoint"
+    },
+    "privateEndpointName": {
+      "value": "pe-weather-sqldb-01"
+    },
+    "privateDnsVnetLinkName": {
+      "value": "link-sqldb-vnet"
+    },
+    "databaseSkuName": {
+      "value": "S0"
+    },
+    "databaseSkuTier": {
+      "value": "Standard"
+    },
+    "databaseSkuCapacity": {
+      "value": 10
+    }
+  }
+}

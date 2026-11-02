@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "resourceGroupName": "rg-weather-cosmosdb-01"
+  },
+  "parameters": {
+    "location": { "value": "eastus" },
+    "vnetName": { "value": "vnet-weather-cosmosdb-01" },
+    "privateEndpointSubnetName": { "value": "snet-cosmosdb-private-endpoint" },
+    "accountName": { "value": "weathercosmosdb01" },
+    "databaseName": { "value": "weather" },
+    "containerName": { "value": "observations" },
+    "partitionKeyPath": { "value": "/weatherStationId" },
+    "privateDnsZoneName": { "value": "privatelink.documents.azure.com" },
+    "vnetLinkName": { "value": "link-cosmosdb-vnet" },
+    "privateEndpointName": { "value": "pep-cosmosdb-01" },
+    "privateDnsZoneGroupName": { "value": "default" }
+  }
+}

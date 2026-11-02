@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "resourceGroupName": "rg-weather-keyvault-01"
+  },
+  "parameters": {
+    "location": { "value": "eastus" },
+    "vnetName": { "value": "vnet-weather-keyvault-01" },
+    "privateEndpointSubnetName": { "value": "snet-keyvault-private-endpoint" },
+    "vaultName": { "value": "kv-weather-keyvault-01" },
+    "privateDnsZoneName": { "value": "privatelink.vaultcore.azure.net" },
+    "vnetLinkName": { "value": "link-keyvault-vnet" },
+    "privateEndpointName": { "value": "pep-keyvault-01" },
+    "privateDnsZoneGroupName": { "value": "default" },
+    "softDeleteRetentionInDays": { "value": 90 }
+  }
+}
