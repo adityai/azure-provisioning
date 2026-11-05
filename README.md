@@ -1,6 +1,6 @@
 # Azure private networking deployment templates
 
-This repository contains reusable Bicep templates and Bash/Azure CLI scripts for deploying Azure services with private networking: App Service, Function App, Blob Storage, Azure Files, Azure SQL Database, Cosmos DB for NoSQL, and Key Vault.
+This repository contains reusable Bicep templates and Bash/Azure CLI scripts for deploying Azure services with private networking: App Service, Static Web Apps, Function App, Blob Storage, Azure Files, Azure SQL Database, Cosmos DB for NoSQL, and Key Vault.
 
 The web app is configured with HTTPS-only access and public network access disabled. The deployment provisions infrastructure, but does not publish application code. Start with the [infrastructure plan](appservice/infrastructure-plan.md) and [deployment guide](appservice/README.md).
 
@@ -11,6 +11,7 @@ The web app is configured with HTTPS-only access and public network access disab
 - [cleanup.sh](appservice/cleanup.sh) — deletes a resource group, checks pre-delete resource IDs for survivors, and attempts individual cleanup.
 - [tests](appservice/tests/test_deploy.py) — unit and mock Azure CLI tests.
 - [input/appservice/](input/appservice/) — Bicep deployment parameter files. Every JSON file in this directory is treated as a deployment input by `deploy.sh`.
+- [staticwebapp/](staticwebapp/) and [input/staticwebapp/](input/staticwebapp/) — Standard Azure Static Web App with private endpoint, derived private DNS zone, deployment/cleanup scripts, and tests.
 - [functionapp/](functionapp/) — Linux Function App infrastructure plan, Bicep template, deployment/cleanup scripts, and tests for private networking.
 - [input/functionapp/](input/functionapp/) — Function App Bicep deployment parameter files, auto-discovered by `functionapp/deploy.sh`.
 - [blobstorage/](blobstorage/) and [input/blobstorage/](input/blobstorage/) — private Blob Storage account and container deployment.
@@ -30,7 +31,21 @@ python3 -m unittest discover -s fileshare/tests -v
 python3 -m unittest discover -s sqldb/tests -v
 python3 -m unittest discover -s cosmosdb/tests -v
 python3 -m unittest discover -s keyvault/tests -v
+python3 -m unittest discover -s staticwebapp/tests -v
 ```
+
+## Static Web Apps
+
+The Static Web Apps template provisions the Standard hosting plan, private endpoint, and private DNS. Standard is required for private endpoints. It does not publish site assets; use a separate site deployment workflow. Review all parameter files in `input/staticwebapp/` before a live run because `deploy.sh` auto-discovers every JSON file there.
+
+Run a mock deployment and the service tests with:
+
+```bash
+./staticwebapp/deploy.sh --mock
+python3 -m unittest discover -s staticwebapp/tests -v
+```
+
+See the [Static Web Apps deployment guide](staticwebapp/README.md) and [infrastructure plan](staticwebapp/infrastructure-plan.md).
 
 ## Function App deployment
 
