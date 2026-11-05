@@ -372,6 +372,16 @@ class DeployScriptTests(unittest.TestCase):
             self.assertIn("Resource group: rg-appservice-01 (eastus)", result.stdout)
             self.assertTrue((temp_path / "rg-appservice-01.log").exists())
 
+    def test_template_includes_workspace_monitoring_and_private_key_vault(self) -> None:
+        template = (ROOT / "main.bicep").read_text()
+
+        self.assertIn("Microsoft.OperationalInsights/workspaces", template)
+        self.assertIn("Microsoft.Insights/components", template)
+        self.assertIn("APPLICATIONINSIGHTS_CONNECTION_STRING", template)
+        self.assertIn("Microsoft.KeyVault/vaults", template)
+        self.assertIn("publicNetworkAccess: 'Disabled'", template)
+        self.assertIn("keyVaultPrivateEndpoint", template)
+
 
 class CleanupScriptTests(unittest.TestCase):
     def fake_azure_cli(self, temp_path: Path) -> tuple[Path, Path]:

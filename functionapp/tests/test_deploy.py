@@ -130,6 +130,11 @@ class FunctionAppDeploymentTests(unittest.TestCase):
         self.assertIn("WEBSITE_CONTENTOVERVNET", template)
         self.assertIn("storagePrivateEndpoints", template)
         self.assertIn("privateDnsZoneName", template)
+        self.assertIn("Microsoft.OperationalInsights/workspaces", template)
+        self.assertIn("Microsoft.Insights/components", template)
+        self.assertIn("APPLICATIONINSIGHTS_CONNECTION_STRING", template)
+        self.assertIn("Microsoft.KeyVault/vaults", template)
+        self.assertIn("keyVaultPrivateEndpoint", template)
         for service in ("blob", "file", "queue", "table"):
             self.assertIn(f"suffix: '{service}'", template)
 

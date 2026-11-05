@@ -29,6 +29,15 @@
     "webAppName": {
       "value": "app-weather-service-01"
     },
+    "applicationInsightsName": {
+      "value": "appi-weather-service-01"
+    },
+    "logAnalyticsWorkspaceName": {
+      "value": "log-weather-service-01"
+    },
+    "vaultName": {
+      "value": "kv-weather-service-01"
+    },
     "privateDnsZoneName": {
       "value": "privatelink.azurewebsites.net"
     },

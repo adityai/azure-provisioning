@@ -28,6 +28,19 @@ param storageAccountName string
 @description('Globally unique Function App name; lowercase letters, numbers, and hyphens only.')
 param functionAppName string
 
+@minLength(1)
+@maxLength(260)
+param applicationInsightsName string = '${functionAppName}-appi'
+
+@minLength(4)
+@maxLength(63)
+param logAnalyticsWorkspaceName string = take('${functionAppName}-logs', 63)
+
+@minLength(3)
+@maxLength(24)
+@description('Globally unique vault name containing only letters, numbers, and hyphens.')
+param vaultName string = take('kv${replace(toLower(functionAppName), '-', '')}', 24)
+
 @allowed([
   'Python|3.11'
   'Python|3.12'
@@ -163,6 +176,98 @@ resource privateEndpointSubnet 'Microsoft.Network/virtualNetworks/subnets@2024-0
   }
 }
 
+resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: logAnalyticsWorkspaceName
+  location: location
+  properties: {
+    retentionInDays: 30
+    sku: {
+      name: 'PerGB2018'
+    }
+  }
+}
+
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: applicationInsightsName
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    IngestionMode: 'LogAnalytics'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
+  }
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2026-05-15' = {
+  name: vaultName
+  location: location
+  properties: {
+    tenantId: subscription().tenantId
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    enablePurgeProtection: true
+    publicNetworkAccess: 'Disabled'
+  }
+}
+
+resource keyVaultPrivateDnsZone 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: 'privatelink.vaultcore.azure.net'
+  location: 'global'
+}
+
+resource keyVaultPrivateDnsVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: keyVaultPrivateDnsZone
+  name: take('kv-${vnetLinkName}', 80)
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: vnet.id
+    }
+  }
+}
+
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+  name: take('pe-${vaultName}', 80)
+  location: location
+  properties: {
+    subnet: {
+      id: privateEndpointSubnet.id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: 'keyVaultPrivateLink'
+        properties: {
+          privateLinkServiceId: keyVault.id
+          groupIds: [
+            'vault'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource keyVaultPrivateEndpointDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
+  parent: keyVaultPrivateEndpoint
+  name: take('kv-${privateDnsZoneGroupName}', 80)
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'keyVaultPrivateDnsZone'
+        properties: {
+          privateDnsZoneId: keyVaultPrivateDnsZone.id
+        }
+      }
+    ]
+  }
+}
+
 resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
   name: planName
   location: location
@@ -294,6 +399,7 @@ resource functionAppSettings 'Microsoft.Web/sites/config@2022-03-01' = {
   properties: {
     FUNCTIONS_EXTENSION_VERSION: '~4'
     FUNCTIONS_WORKER_RUNTIME: 'python'
+    APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString
     AzureWebJobsStorage: storageConnectionString
     WEBSITE_CONTENTAZUREFILECONNECTIONSTRING: storageConnectionString
     WEBSITE_CONTENTSHARE: contentShareName

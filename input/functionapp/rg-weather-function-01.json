@@ -26,6 +26,15 @@
     "functionAppName": {
       "value": "func-weather-01"
     },
+    "applicationInsightsName": {
+      "value": "appi-weather-function-01"
+    },
+    "logAnalyticsWorkspaceName": {
+      "value": "log-weather-function-01"
+    },
+    "vaultName": {
+      "value": "kv-weather-function-01"
+    },
     "runtimeStack": {
       "value": "Python|3.12"
     },
